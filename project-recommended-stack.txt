@@ -1,0 +1,9 @@
+MANDATORY
+virtual environment (.gitignore file) -> add files and folders that you dont want to push to github
+Python OOP
+Relational Databases (PostgreSQL, MySQL, SQLite) (except for genai)
+API - must 
+
+ADVANCED (NOT MANDATORY)
+Implemente GUI - tkinker
+Flask - simple python framework
