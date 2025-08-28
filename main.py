@@ -1,5 +1,5 @@
-from db_connection import db_creation, show_categories
-from api_currency_Frankfurter import return_currencies_from_api, exchange_money, check_exchange_rates
+from db_connection import db_creation, show_categories, check_null_in_amount_ils, connect_to_the_line, update_the_line
+from api_currency_Frankfurter import return_currencies_from_api, exchange_money, check_exchange_rates, check_connection
 from adding_expense import Expense
 
 
@@ -101,7 +101,22 @@ def main():
             print('Your expense was successfully added to DB Table')
 
         if first_user_input == 4:
-            pass
+            if check_connection():
+                null_dict = check_null_in_amount_ils()
+                if null_dict != {}:
+                    for key in null_dict.keys():
+                        list_of_rows = connect_to_the_line(key)
+                        user_amount_ils_new = exchange_money(list_of_rows[1], list_of_rows[2], list_of_rows[3])
+                        user_rate_ils_per_unit_new = check_exchange_rates(list_of_rows[1], list_of_rows[3])
+                        list_of_rows.append(user_amount_ils_new)
+                        list_of_rows.append(user_rate_ils_per_unit_new)
+                        update_the_line(list_of_rows)
+                    print('NULLs fixed!')
+                else:
+                    print('There are no NULLs')
+            else:
+                print('Please check your connection')
+
         if first_user_input == 5:
             pass
         if first_user_input == 6:

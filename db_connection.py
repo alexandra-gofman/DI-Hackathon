@@ -45,6 +45,45 @@ def show_categories():
     rows = cursor.fetchall()
     return dict(rows)
 
+def show_expenses():
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM expenses;')
+    table = cursor.fetchall()
+    return table
+
+def check_null_in_amount_ils():
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('SELECT id, amount_ils FROM expenses WHERE amount_ils IS NULL')
+    rows = cursor.fetchall()
+    return dict(rows)
+
+def connect_to_the_line(eid):
+    eid = str(eid)
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM expenses WHERE id = %s', eid)
+    output = cursor.fetchone()
+    user_id = output[0]
+    user_date = output[1].isoformat()
+    user_amount = float(output[2])
+    user_currency = output[3]
+    user_list = [user_id, user_date, user_amount, user_currency]
+    return user_list
+
+def update_the_line(list_of_new_data):
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('''UPDATE expenses
+                    SET amount_ils = %s,
+                        rate_ils_per_unit = %s
+                    WHERE id = %s''',
+                   (list_of_new_data[4], list_of_new_data[5], list_of_new_data[0]))
+    connection.commit()
+
+
+
 # IN THE END OF THE PROJECT, LAST STEP IS: CREATE A requirements.txt FILE:
 # ON THE TERMINAL RUN: py -m pip freeze > requirements.txt 
 # the requirements file SHOULD be pushed to github

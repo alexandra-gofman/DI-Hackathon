@@ -2,6 +2,9 @@ import requests
 import json
 import os
 
+def check_connection():
+    response = requests.get(f'https://api.frankfurter.dev/v1/latest', timeout=10)
+    return response.ok
 def check_exchange_rates(date, currency): #date format is yyyy-mm-dd
     response = requests.get(f'https://api.frankfurter.dev/v1/{date}?base=ILS&symbols={currency}')
     return response.json()["rates"][currency]
