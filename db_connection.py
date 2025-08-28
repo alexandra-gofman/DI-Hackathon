@@ -60,18 +60,27 @@ def check_null_in_amount_ils():
     return dict(rows)
 
 def connect_to_the_line(eid):
-    eid = str(eid)
     connection = connection_to_db()
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM expenses WHERE id = %s', eid)
+    cursor.execute('SELECT id, date, amount, currency, amount_ils, rate_ils_per_unit, category_id FROM expenses WHERE id = %s ORDER BY date', (eid,))
     output = cursor.fetchone()
     user_id = output[0]
     user_date = output[1].isoformat()
     user_amount = float(output[2])
     user_currency = output[3]
-    user_list = [user_id, user_date, user_amount, user_currency]
+    if output[4] == None:
+        user_amount_ils = None
+    else:
+        user_amount_ils = float(output[4])
+    if output[5] == None:
+        user_rate_ils_per_unit = None
+    else:
+        user_rate_ils_per_unit = float(output[5])
+    user_category_id = output[6]
+    user_list = [user_id, user_date, user_amount, user_currency, user_amount_ils, user_rate_ils_per_unit, user_category_id]
     return user_list
 
+print(connect_to_the_line(1))
 def update_the_line(list_of_new_data):
     connection = connection_to_db()
     cursor = connection.cursor()
@@ -82,7 +91,22 @@ def update_the_line(list_of_new_data):
                    (list_of_new_data[4], list_of_new_data[5], list_of_new_data[0]))
     connection.commit()
 
+def count_num_of_lines():
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('SELECT COUNT(*) FROM expenses;')
+    total = cursor.fetchone()[0]
+    return total
 
+def last_n_expenses(n):
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('''SELECT id, date, amount, currency, amount_ils, rate_ils_per_unit, category_id
+                        FROM expenses
+                        ORDER BY date DESC, id DESC 
+                        LIMIT %s;''', (n))
+    rows = cursor.fetchall()
+    return list(rows)
 
 # IN THE END OF THE PROJECT, LAST STEP IS: CREATE A requirements.txt FILE:
 # ON THE TERMINAL RUN: py -m pip freeze > requirements.txt 

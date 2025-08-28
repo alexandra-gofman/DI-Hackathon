@@ -1,4 +1,4 @@
-from db_connection import db_creation, show_categories, check_null_in_amount_ils, connect_to_the_line, update_the_line
+from db_connection import db_creation, show_categories, check_null_in_amount_ils, connect_to_the_line, update_the_line, last_n_expenses
 from api_currency_Frankfurter import return_currencies_from_api, exchange_money, check_exchange_rates, check_connection
 from adding_expense import Expense
 
@@ -101,6 +101,8 @@ def main():
             print('Your expense was successfully added to DB Table')
 
         if first_user_input == 4:
+            ''' 4. Recalculate pending conversions (fill amount_ils for rows where it’s NULL)'''
+
             if check_connection():
                 null_dict = check_null_in_amount_ils()
                 if null_dict != {}:
@@ -108,8 +110,8 @@ def main():
                         list_of_rows = connect_to_the_line(key)
                         user_amount_ils_new = exchange_money(list_of_rows[1], list_of_rows[2], list_of_rows[3])
                         user_rate_ils_per_unit_new = check_exchange_rates(list_of_rows[1], list_of_rows[3])
-                        list_of_rows.append(user_amount_ils_new)
-                        list_of_rows.append(user_rate_ils_per_unit_new)
+                        list_of_rows[4] = user_amount_ils_new
+                        list_of_rows[5] = user_rate_ils_per_unit_new
                         update_the_line(list_of_rows)
                     print('NULLs fixed!')
                 else:
@@ -118,7 +120,16 @@ def main():
                 print('Please check your connection')
 
         if first_user_input == 5:
-            pass
+            '''5. Show last N expenses'''
+
+            n = input('    Please enter number of last expenses: ')
+            list_of_lines = last_n_expenses(n)
+            for line in list_of_lines:
+                output = [line[0], line[1].isoformat(), float(line[2]), line[3], float(line[4]), float(line[5]), line[6]]
+                print(output)
+
+
+
         if first_user_input == 6:
             pass
         if first_user_input == 7:
