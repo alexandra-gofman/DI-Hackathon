@@ -1,4 +1,4 @@
-from db_connection import db_creation, show_categories, check_null_in_amount_ils, connect_to_the_line, update_the_line, last_n_expenses
+from db_connection import db_creation, show_categories, check_null_in_amount_ils, connect_to_the_line, update_the_line, return_monthly_report,  last_n_expenses
 from api_currency_Frankfurter import return_currencies_from_api, exchange_money, check_exchange_rates, check_connection
 from adding_expense import Expense
 
@@ -128,16 +128,66 @@ def main():
                 output = [line[0], line[1].isoformat(), float(line[2]), line[3], float(line[4]), float(line[5]), line[6]]
                 print(output)
 
-
-
         if first_user_input == 6:
-            pass
+            '''6. Monthly report (totals & by category)'''
+
+            nulls_list = check_null_in_amount_ils()
+            if nulls_list != {}:
+                user_answer = input('''    There are some operations in other currency pending for exchange. 
+                      Do you want to continue without this operations? [Y/N]:  ''')
+
+                user_answer = user_answer.strip().upper()
+                if user_answer == 'Y':
+                    user_year = input('    Please enter a year: ').strip()
+                    user_month = input('    Please enter a month: ').strip()
+                    monthly_report = return_monthly_report([user_year, user_month])
+                    print(f'Your report for year: {user_year}, month: {user_month}')
+                    for category, total in monthly_report:
+                        print(f' {category}:    {float(total)}')
+                elif user_answer == 'N':
+                    user_answer2 = input('''  Would you like to try fill amount_ils for rows where it’s NULL?
+                                         [Y/N]: ''')
+                    user_answer2 = user_answer2.strip().upper()
+                    if user_answer2 == 'Y':
+                        if check_connection():
+                            null_dict = check_null_in_amount_ils()
+
+                            for key in null_dict.keys():
+                                list_of_rows = connect_to_the_line(key)
+                                user_amount_ils_new = exchange_money(list_of_rows[1], list_of_rows[2], list_of_rows[3])
+                                user_rate_ils_per_unit_new = check_exchange_rates(list_of_rows[1], list_of_rows[3])
+                                list_of_rows[4] = user_amount_ils_new
+                                list_of_rows[5] = user_rate_ils_per_unit_new
+                                update_the_line(list_of_rows)
+                            print('NULLs fixed! Starting preparation for monthly report...')
+
+                            user_year = input('    Please enter a year: ').strip()
+                            user_month = input('    Please enter a month: ').strip()
+                            monthly_report = return_monthly_report([user_year, user_month])
+                            print(f'Your report for year: {user_year}, month: {user_month}')
+                            for category, total in monthly_report:
+                                print(f' {category}:    {float(total)}')
+                        else:
+                            print('Please check your connection. Exit...')
+                            break
+                    if user_answer2 == 'N':
+                        print('Exit...')
+                        break
+            else:
+                user_year = input('    Please enter a year: ').strip()
+                user_month = input('    Please enter a month: ').strip()
+                monthly_report = return_monthly_report([user_year, user_month])
+                print(f'Your report for year: {user_year}, month: {user_month}')
+                for category, total in monthly_report:
+                    print(f' {category}:    {float(total)}')
+
         if first_user_input == 7:
             pass
         if first_user_input == 8:
             pass
         if first_user_input == 9:
             pass
+
         if first_user_input == 10:
             break
 

@@ -80,7 +80,6 @@ def connect_to_the_line(eid):
     user_list = [user_id, user_date, user_amount, user_currency, user_amount_ils, user_rate_ils_per_unit, user_category_id]
     return user_list
 
-print(connect_to_the_line(1))
 def update_the_line(list_of_new_data):
     connection = connection_to_db()
     cursor = connection.cursor()
@@ -107,6 +106,31 @@ def last_n_expenses(n):
                         LIMIT %s;''', (n))
     rows = cursor.fetchall()
     return list(rows)
+
+def return_monthly_report(date):
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('''WITH bounds AS (
+                      SELECT make_date(%s, %s, 1) AS d1,
+                             make_date(%s, %s, 1) + INTERVAL '1 month' AS d2
+                      )
+                    SELECT
+                      COALESCE(c.name, 'TOTAL') AS category,
+                      ROUND(SUM(e.amount_ils), 2) AS total_ils
+                    FROM expenses e
+                    JOIN categories c ON c.id = e.category_id
+                    JOIN bounds b ON true
+                    WHERE e.amount_ils IS NOT NULL
+                      AND e.date >= b.d1 AND e.date < b.d2
+                    GROUP BY ROLLUP (c.name)
+                    ORDER BY (c.name IS NULL), total_ils DESC;
+                        ''', (date[0], date[1], date[0], date[1]))
+    rows = cursor.fetchall()
+    return rows
+
+print(return_monthly_report(['2025', '8']))
+
+
 
 # IN THE END OF THE PROJECT, LAST STEP IS: CREATE A requirements.txt FILE:
 # ON THE TERMINAL RUN: py -m pip freeze > requirements.txt 
