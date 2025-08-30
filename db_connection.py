@@ -1,5 +1,6 @@
 import psycopg2
 from connect import DATABASE, USER, PASSWORD,HOST, PORT
+import os, json
 
 def connection_to_db():
     connection = psycopg2.connect(database=DATABASE,
@@ -128,9 +129,44 @@ def return_monthly_report(date):
     rows = cursor.fetchall()
     return rows
 
-print(return_monthly_report(['2025', '8']))
+def export_month_report(date, out_dir="reports"):
+    rows = return_monthly_report(date)
+    os.makedirs(out_dir, exist_ok=True)
+    if len(date[1]) == 1:
+        date[1] = '0' + date[1]
+    path = os.path.join(out_dir, f"report_{date[0]}-{date[1]}.json")
 
+    by_category = []
+    month_total = 0.0
 
+    for c, t in rows:
+        if c == 'TOTAL':
+            if t is not None:
+                month_total = float(t)
+            else:
+                month_total = 0.0
+            continue
+        by_category.append({"category": c, "total_ils": float(t)})
+
+    payload = {
+        "month": f'{date[0]}-{date[1]}',
+        "currency": "ILS",
+        "total_ils": month_total,
+        "by_category": by_category,
+    }
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    return path
+
+def clear_table():
+    connection = connection_to_db()
+    cursor = connection.cursor()
+    cursor.execute('SELECT COUNT(*) FROM expenses;')
+    (num_lines_in_table,) = cursor.fetchone()
+    cursor.execute('TRUNCATE TABLE expenses RESTART IDENTITY;')
+    return num_lines_in_table
 
 # IN THE END OF THE PROJECT, LAST STEP IS: CREATE A requirements.txt FILE:
 # ON THE TERMINAL RUN: py -m pip freeze > requirements.txt 

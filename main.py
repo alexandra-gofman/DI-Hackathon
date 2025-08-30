@@ -1,4 +1,4 @@
-from db_connection import db_creation, show_categories, check_null_in_amount_ils, connect_to_the_line, update_the_line, return_monthly_report,  last_n_expenses
+from db_connection import db_creation, show_categories, check_null_in_amount_ils,clear_table, export_month_report, connect_to_the_line, update_the_line, return_monthly_report,  last_n_expenses
 from api_currency_Frankfurter import return_currencies_from_api, exchange_money, check_exchange_rates, check_connection
 from adding_expense import Expense
 
@@ -16,9 +16,9 @@ def main():
     4. Recalculate pending conversions (fill amount_ils for rows where it’s NULL)
     5. Show last N expenses
     6. Monthly report (totals & by category)
-    7. Export monthly report (JSON/CSV)
+    7. Export monthly report (JSON)
     8. Seed demo data (Faker)
-    9. Clear all of table "expenses" data
+    9. Clear all table "expenses" data
     10. Exit''')
 
         while True:
@@ -182,11 +182,24 @@ def main():
                     print(f' {category}:    {float(total)}')
 
         if first_user_input == 7:
-            pass
+            '''7. Export monthly report (JSON)'''
+
+            user_year = input('    Please enter a year: ').strip()
+            user_month = input('    Please enter a month: ').strip()
+            print(f'    Path: {export_month_report([user_year, user_month])} \nYour report is done!')
+
         if first_user_input == 8:
             pass
+
         if first_user_input == 9:
-            pass
+            '''9. Clear all table "expenses" data'''
+
+            print('     All of the lines in "expenses" table will be deleted. Are you sure?')
+            user_answer = input('[Y/N] : ').strip()
+            if user_answer == 'Y':
+                print(f'{clear_table()} lines were deleted')
+            else:
+                break
 
         if first_user_input == 10:
             break
